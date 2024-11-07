@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { Map as LeafletMap } from "leaflet";
 import { utils, read } from "xlsx";
 import "leaflet/dist/leaflet.css";
 import { divIcon } from "leaflet";
@@ -57,7 +58,7 @@ const Map = () => {
   const [processedPeople, setProcessedPeople] = useState(0);
   const [filteredYear, setFilteredYear] = useState<string>("");
 
-  const [map, setMap] = useState(null);
+  const [map, setMap] = useState<LeafletMap | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target?.files && event.target?.files[0]) {
