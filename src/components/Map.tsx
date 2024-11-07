@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import { utils, read } from "xlsx";
 import "leaflet/dist/leaflet.css";
 import { divIcon } from "leaflet";
@@ -109,7 +109,7 @@ const Map = () => {
     const foundPeople: Person[] = rows
       .filter((row) => !!row["Bydliště"])
       .map((row) => ({
-        city: row["Bydliště"].replace(/[0-9]/g, ''),
+        city: row["Bydliště"].replace(/[0-9]/g, ""),
         year: new Date(Date.parse(row["Datum prodeje"])).getFullYear(),
         name: `${row["Jméno"] ?? ""} ${row["Přijmení"] ?? ""}`,
         device: row["Typ"],
