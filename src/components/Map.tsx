@@ -66,80 +66,79 @@ const Map = () => {
     }
   };
 
-  const fetchCityLocation = async (
-    person: Person
-  ): Promise<PersonWithLocation> => {
-    const response = await fetch(
-      `https://photon.adamprchal.com/api?q=${encodeURIComponent(
-        person.city
-      )}&layer=city&limit=1`
-    );
-    const data = await response.json();
-
-    setProcessedPeople((state) => state + 1);
-    if (data.features && data.features[0]) {
-      return {
-        ...person,
-        location: addRandomOffset({
-          lat: data.features[0].geometry.coordinates[1],
-          lng: data.features[0].geometry.coordinates[0],
-        }),
-      };
-    }
-    return person;
-  };
-
-  const processFile = async () => {
-    setIsLoading(true);
-
-    if (file === null) {
-      return;
-    }
-    const data = await file.arrayBuffer();
-    const workbook = read(data, {
-      cellText: false,
-      cellDates: true,
-    });
-
-    const firstSheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[firstSheetName];
-    const rows = utils.sheet_to_json(sheet, {
-      raw: false,
-      dateNF: "yyyy-mm-dd",
-    }) as Record<string, string>[];
-    const foundPeople: Person[] = rows
-      .filter((row) => !!row["Bydliště"])
-      .map((row) => ({
-        city: row["Bydliště"].replace(/[0-9]/g, ""),
-        year: new Date(Date.parse(row["Datum prodeje"])).getFullYear(),
-        name: `${row["Jméno"] ?? ""} ${row["Přijmení"] ?? ""}`,
-        device: row["Typ"],
-      }));
-
-    setTotalPeople(foundPeople.length);
-    setProcessedPeople(0);
-
-    try {
-      const assignedPeople = await Promise.all(
-        foundPeople.map(async (person) => {
-          const personWithLocation = await fetchCityLocation(person);
-          setProcessedPeople((prev) => prev + 1);
-          return personWithLocation;
-        })
-      );
-
-      const filteredAndSortedPeople = assignedPeople
-        .filter((element) => element !== null)
-        .sort((a, b) => a.year - b.year) as PersonWithLocation[];
-
-      setPeople(filteredAndSortedPeople);
-    } catch (error) {
-      console.error("Error fetching locations:", error);
-    }
-    setIsLoading(false);
-  };
-
   useEffect(() => {
+    const fetchCityLocation = async (
+      person: Person
+    ): Promise<PersonWithLocation> => {
+      const response = await fetch(
+        `https://photon.adamprchal.com/api?q=${encodeURIComponent(
+          person.city
+        )}&layer=city&limit=1`
+      );
+      const data = await response.json();
+
+      setProcessedPeople((state) => state + 1);
+      if (data.features && data.features[0]) {
+        return {
+          ...person,
+          location: addRandomOffset({
+            lat: data.features[0].geometry.coordinates[1],
+            lng: data.features[0].geometry.coordinates[0],
+          }),
+        };
+      }
+      return person;
+    };
+
+    const processFile = async () => {
+      setIsLoading(true);
+
+      if (file === null) {
+        return;
+      }
+      const data = await file.arrayBuffer();
+      const workbook = read(data, {
+        cellText: false,
+        cellDates: true,
+      });
+
+      const firstSheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[firstSheetName];
+      const rows = utils.sheet_to_json(sheet, {
+        raw: false,
+        dateNF: "yyyy-mm-dd",
+      }) as Record<string, string>[];
+      const foundPeople: Person[] = rows
+        .filter((row) => !!row["Bydliště"])
+        .map((row) => ({
+          city: row["Bydliště"].replace(/[0-9]/g, ""),
+          year: new Date(Date.parse(row["Datum prodeje"])).getFullYear(),
+          name: `${row["Jméno"] ?? ""} ${row["Přijmení"] ?? ""}`,
+          device: row["Typ"],
+        }));
+
+      setTotalPeople(foundPeople.length);
+      setProcessedPeople(0);
+
+      try {
+        const assignedPeople = await Promise.all(
+          foundPeople.map(async (person) => {
+            const personWithLocation = await fetchCityLocation(person);
+            setProcessedPeople((prev) => prev + 1);
+            return personWithLocation;
+          })
+        );
+
+        const filteredAndSortedPeople = assignedPeople
+          .filter((element) => element !== null)
+          .sort((a, b) => a.year - b.year) as PersonWithLocation[];
+
+        setPeople(filteredAndSortedPeople);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
+      setIsLoading(false);
+    };
     if (file) {
       processFile();
     }
